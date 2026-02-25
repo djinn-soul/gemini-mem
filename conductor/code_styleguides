@@ -1,0 +1,7 @@
+# Code Styleguides
+
+- Keep modules focused and small.
+- Prefer pure functions for business logic.
+- Isolate runtime-specific APIs behind adapters.
+- Avoid silent fallback behavior during development.
+- No empty try/catch blocks.

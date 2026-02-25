@@ -1,0 +1,9 @@
+description = "Show Gemini memory database status for current project"
+prompt = """
+Run exactly one shell command and do not inspect files or run extra tools.
+Command: `node --no-warnings "${extensionPath}${/}dist${/}commands${/}mem-status.js"`
+Return only the command stdout exactly as-is.
+Do not add headings, numbering, markdown, or interpretation text.
+
+!{node --no-warnings "${extensionPath}${/}dist${/}commands${/}mem-status.js"}
+"""

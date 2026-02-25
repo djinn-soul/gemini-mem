@@ -1,0 +1,11 @@
+description = "Prune old low-importance memories"
+prompt = """
+Run exactly one shell command and do not inspect files or run extra tools.
+Prune memory records using args: <maxAgeDays> <importanceFloor>.
+If no args are provided, defaults are used by the script.
+Command: `node --no-warnings "${extensionPath}${/}dist${/}commands${/}mem-prune.js" {{args}}`
+Return only the command stdout JSON exactly as-is.
+Do not add headings, numbering, markdown, or interpretation text.
+
+!{node --no-warnings "${extensionPath}${/}dist${/}commands${/}mem-prune.js" {{args}}}
+"""

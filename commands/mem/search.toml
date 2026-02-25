@@ -1,0 +1,10 @@
+description = "Search stored memories using local FTS"
+prompt = """
+Run exactly one shell command and do not inspect files or run extra tools.
+Search query: {{args}}
+Command: `node --no-warnings "${extensionPath}${/}dist${/}commands${/}mem-search.js" "{{args}}"`
+Return only the command stdout JSON exactly as-is.
+Do not add headings, numbering, markdown, or interpretation text.
+
+!{node --no-warnings "${extensionPath}${/}dist${/}commands${/}mem-search.js" "{{args}}"}
+"""

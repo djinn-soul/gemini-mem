@@ -1,0 +1,10 @@
+description = "Show latest stored memory cards"
+prompt = """
+Run exactly one shell command and do not inspect files or run extra tools.
+Show the most recent memory cards (default 5 or provided value).
+Command: `node --no-warnings "${extensionPath}${/}dist${/}commands${/}mem-last.js" {{args}}`
+Return only the command stdout exactly as-is.
+Do not add headings, numbering, markdown, or interpretation text.
+
+!{node --no-warnings "${extensionPath}${/}dist${/}commands${/}mem-last.js" {{args}}}
+"""

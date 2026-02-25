@@ -1,0 +1,126 @@
+# CONTINUITY
+
+## Snapshot
+- 2026-02-25 [USER] Goal: implement a Gemini CLI memory extension using TypeScript/Node first, with Bun-ready architecture.
+- 2026-02-25 [USER] Success criteria: hooks (`AfterAgent`, `BeforeAgent`, `SessionStart`), SQLite-backed memory store, extension manifest/settings, and debug commands.
+- 2026-02-25 [USER] New request: debug why live Gemini CLI sessions were not persisting memories automatically.
+- 2026-02-25 [USER] New request: refresh README with current codebase behavior and add contributor documentation.
+- 2026-02-25 [USER] New request: prepare GitHub/Gemini extension publishing assets via file creation only.
+- 2026-02-25 [USER] Constraints: modular code; avoid Node-only coupling in core logic; fail-open hook behavior.
+- 2026-02-25 [TOOL] Implementation scaffold completed from empty repository; build and command validation executed locally.
+- 2026-02-25 [TOOL] Docker daemon unavailable on host, so verification ran via local Node tooling.
+
+## Done (recent)
+- 2026-02-25 [CODE] Added GitHub Actions CI workflow (`.github/workflows/ci.yml`) for build/test on push/PR.
+- 2026-02-25 [CODE] Added GitHub release workflow (`.github/workflows/release-extension.yml`) to build/test/package and publish tag releases.
+- 2026-02-25 [CODE] Added `PUBLISHING.md` with GitHub + Gemini extension release procedure and install commands.
+- 2026-02-25 [CODE] Added `LICENSE` (MIT) referenced by extension metadata and release packaging.
+- 2026-02-25 [CODE] Rewrote README to reflect current architecture, install behavior, command output modes, MCP HTTP usage, Antigravity flow, and auto project `GEMINI.md` generation.
+- 2026-02-25 [CODE] Added contributor docs: `CONTRIBUTING.md` (full workflow/checks) and `CONTRIBUTOR.md` (pointer file).
+- 2026-02-25 [CODE] Changed project `GEMINI.md` sync to default-on for MCP session-end flows (unless explicitly disabled), instead of requiring `agent: "antigravity"`.
+- 2026-02-25 [CODE] Added codebase-driven snapshot generation (`detected stacks`, `key files`, `top directories`) into auto-generated project `GEMINI.md`.
+- 2026-02-25 [CODE] Added `src/mcp/codebase-profile.ts` and integrated it into project context-file writer.
+- 2026-02-25 [CODE] Added Antigravity-only automatic project `GEMINI.md` sync on `memory_end_session` (when `agent: "antigravity"`), including MCP URL and tool workflow block.
+- 2026-02-25 [CODE] Added shared MCP constants module and removed hardcoded server version by deriving `serverInfo.version` from root `package.json`.
+- 2026-02-25 [CODE] Added MCP HTTP transport server (`src/mcp/http-server.ts`) for host/port clients (default `127.0.0.1:3303/mcp`), while keeping stdio MCP server.
+- 2026-02-25 [CODE] Centralized MCP constants (`src/mcp/constants.ts`) and made MCP server version load from root `package.json` to avoid hardcoded drift.
+- 2026-02-25 [CODE] Refactored MCP JSON-RPC handling into shared core (`src/mcp/rpc-core.ts`) used by both stdio and HTTP transports.
+- 2026-02-25 [CODE] Added MCP HTTP integration tests (`tests/mcp-http.integration.test.cjs`) and test script `test:mcp-http`.
+- 2026-02-25 [CODE] Added MCP server v1 (`src/mcp/server.ts`) with tools for status/context/search/save/cite/end-session on the shared memory DB.
+- 2026-02-25 [CODE] Added MCP service + tool definitions (`src/mcp/service.ts`, `src/mcp/tools.ts`) and registered server in extension manifest (`mcpServers.geminiMemServer`).
+- 2026-02-25 [CODE] Added MCP integration test suite (`tests/mcp.integration.test.cjs`) and updated npm test scripts to run hooks + MCP.
+- 2026-02-25 [CODE] Added `AfterAgent` guard to skip memory writes for prompts starting with `/mem` (e.g., `/mem:status`, `/mem:last`, `/mem:prune`).
+- 2026-02-25 [CODE] Added integration test coverage for `/mem:*` skip behavior in `AfterAgent`.
+- 2026-02-25 [TOOL] Rebuilt extension dist and re-linked `gemini-mem` with `--consent` to refresh live command templates before user restart.
+- 2026-02-25 [CODE] Changed `mem-status` and `mem-last` command output to human-readable text by default, with optional `--json` mode for structured output.
+- 2026-02-25 [CODE] Updated `/mem:*` slash command prompts to return only JSON and use `node --no-warnings` to suppress `node:sqlite` experimental warnings in command output.
+- 2026-02-25 [CODE] Removed runtime `zod` dependency by switching to local JSON validators for summarizer/reranker payloads.
+- 2026-02-25 [CODE] Updated `.gitignore` to allow tracking prebuilt `dist/` for install-once extension releases.
+- 2026-02-25 [CODE] Added per-repo DB path resolution so default storage is `${HOME}/.gemini/gemini-mem/<repo-folder>/memory.db`.
+- 2026-02-25 [CODE] Added Windows Gemini command resolution in runtime adapter (`gemini` shim -> Node entrypoint) to fix `spawn gemini ENOENT`.
+- 2026-02-25 [CODE] Increased default summarization/rerank timeouts (`60s` / `45s`) and added explicit hook timeouts (`AfterAgent` 180s, `BeforeAgent` 120s).
+- 2026-02-25 [CODE] Added optional `MEM_DEBUG_HOOK_FILE` tracing for `AfterAgent` runtime diagnostics.
+- 2026-02-25 [TOOL] Verified direct `AfterAgent` invocation now stores memory with default settings on Windows.
+- 2026-02-25 [TOOL] Verified live Gemini runs execute `AfterAgent` successfully (debug mode shows `Hook execution for AfterAgent: ... executed successfully`).
+- 2026-02-25 [TOOL] Verified memory DB now contains live session entries and `/mem:search parser` returns parser memory.
+- 2026-02-25 [TOOL] Regression suite still passes (`npm run test:hooks` 4/4).
+
+## Working set
+- CONTINUITY.md
+- gemini-extension.json
+- src/mcp/server.ts
+- src/mcp/service.ts
+- src/mcp/tools.ts
+- src/hooks/after-agent.ts
+- src/commands/mem-status.ts
+- src/commands/mem-last.ts
+- tests/hooks.integration.test.cjs
+- tests/mcp.integration.test.cjs
+- README.md
+- CONTRIBUTING.md
+- CONTRIBUTOR.md
+- PUBLISHING.md
+- .github/workflows/ci.yml
+- .github/workflows/release-extension.yml
+- LICENSE
+- package.json
+
+## Decisions
+- 2026-02-25 D001 ACTIVE [USER]: Runtime strategy is TypeScript/Node now, Bun migration later via adapter isolation.
+- 2026-02-25 D002 ACTIVE [CODE]: SQLite adapter uses `node:sqlite` instead of `better-sqlite3` to avoid native binary loading issues.
+- 2026-02-25 D003 ACTIVE [CODE]: Hook integration tests use a mock Gemini executable via `MEM_GEMINI_COMMAND` + `MEM_GEMINI_ARGS_JSON` to keep tests deterministic and offline.
+- 2026-02-25 D004 ACTIVE [CODE]: Slash command prompts were tightened to "single command + concise output" after live smoke test verbosity.
+- 2026-02-25 D005 ACTIVE [CODE]: On Windows, Gemini subprocess invocation resolves to `node <...@google/gemini-cli/dist/index.js>` for reliable execution from hooks.
+- 2026-02-25 D006 ACTIVE [CODE]: Hook timeout must be explicitly configured to avoid host-level timeout killing `AfterAgent` during nested Gemini calls.
+- 2026-02-25 D007 ACTIVE [CODE]: `MEM_DB_PATH` now defaults to a directory root, with effective DB path resolved per project folder (`<root>/<repo>/memory.db`); explicit SQLite file paths still work.
+- 2026-02-25 D008 ACTIVE [CODE]: Runtime hooks/commands should not depend on external npm packages, so shipped `dist/` can run immediately after extension install without per-repo setup.
+- 2026-02-25 D009 ACTIVE [CODE]: `/mem:*` command templates are strict JSON-output commands; narrative summaries are removed to reduce LLM formatting noise.
+- 2026-02-25 D010 ACTIVE [CODE]: `mem-status`/`mem-last` default to readable text output, while `--json` keeps machine-readable output available.
+- 2026-02-25 D011 ACTIVE [CODE]: `AfterAgent` intentionally ignores `/mem:*` turns to prevent command self-observation from polluting memory.
+- 2026-02-25 D012 ACTIVE [CODE]: MCP integration is implemented as a stdio JSON-RPC server without adding runtime package dependencies; it reuses existing memory storage modules.
+- 2026-02-25 D013 ACTIVE [CODE]: MCP supports dual transports (stdio + HTTP); protocol constants are centralized and server version is derived from package metadata.
+- 2026-02-25 D014 ACTIVE [CODE]: Automatic project context-file generation is scoped to MCP session-end calls for Antigravity (`agent: "antigravity"`), not Gemini CLI hooks.
+- 2026-02-25 D015 ACTIVE [CODE]: Project `GEMINI.md` generation is now default behavior for MCP `memory_end_session` and includes a lightweight codebase snapshot; Gemini CLI hooks remain unaffected.
+- 2026-02-25 D016 ACTIVE [CODE]: GitHub tag releases (`v*`) are the canonical publishing channel; release workflow enforces version parity across tag, `package.json`, and `gemini-extension.json`.
+
+## Open questions
+- 2026-02-25 [ASSUMPTION] Even with stricter prompts, Gemini may still add occasional narrative text depending on model/tool behavior.
+- 2026-02-25 [ASSUMPTION] `gemini extensions link . --consent` sometimes emits a `uv` assertion after reporting "already installed"; behavior appears non-blocking but needs upstream confirmation.
+
+## Receipts
+- 2026-02-25 [TOOL] `Get-ChildItem -Force` in `E:\Github\gemini_mem` returned empty.
+- 2026-02-25 [TOOL] `rg --files` returned no tracked files.
+- 2026-02-25 [TOOL] `docker compose run --rm gemini-mem npm run build` failed because Docker daemon was not running.
+- 2026-02-25 [TOOL] `npm run build` succeeded after adapter change.
+- 2026-02-25 [TOOL] `npm run mem:status` succeeded and initialized/queried `C:\Users\Vegito\.gemini\gemini-mem.sqlite`.
+- 2026-02-25 [TOOL] `npm run test:hooks` passed (4/4 tests): includes fail-open, redaction/storage, BeforeAgent injection, SessionStart behavior.
+- 2026-02-25 [TOOL] `gemini extensions link . --consent` succeeded: extension `gemini-mem` linked and enabled.
+- 2026-02-25 [TOOL] `gemini extensions list` shows `gemini-mem (0.1.0)` from `E:\Github\gemini_mem`.
+- 2026-02-25 [TOOL] `gemini -y -p "/mem:status"` returned DB JSON + short summary.
+- 2026-02-25 [TOOL] `gemini -y -p "/mem:search parser"` returned `[]` (no memories yet) with extra verbose reasoning and repeated `AttachConsole failed` logs from non-project extension hooks.
+- 2026-02-25 [TOOL] Re-run: `npm run test:hooks` passed again (4/4 tests).
+- 2026-02-25 [TOOL] Re-run: `gemini extensions link . --consent` returned "already installed" and logged `Assertion failed: !(handle->flags & UV_HANDLE_CLOSING)`; extension remained installed.
+- 2026-02-25 [TOOL] Re-run: `gemini -y -p "/mem:status"` and `gemini -y -p "/mem:search parser"` both succeeded; results unchanged (`totalMemories: 0`, search `[]`).
+- 2026-02-25 [TOOL] Direct hook repro before fix: `node dist/hooks/after-agent.js` failed with `spawn gemini ENOENT`; with resolved entrypoint+timeouts, same flow stored memory successfully.
+- 2026-02-25 [TOOL] `gemini --debug -y -p "Reply exactly with: ack-debug"` showed `Hook execution for AfterAgent: 2 hooks executed successfully`.
+- 2026-02-25 [TOOL] `npm run --silent mem:last -- 10` confirmed live session records (e.g., `ack-debug`, `MEMLIVE-2026-02-25-AAA`) persisted by `AfterAgent`.
+- 2026-02-25 [TOOL] `npm run --silent mem:status` shows `totalMemories: 6` for project `cwd-95f14c870861c6d0`.
+- 2026-02-25 [TOOL] `gemini -y -p "/mem:search parser"` now returns parser memory result (not empty).
+- 2026-02-25 [TOOL] Final regression check: `npm run test:hooks` passes 4/4 after debug fixes and timeout/command-resolution updates.
+- 2026-02-25 [TOOL] `node E:\Github\gemini_mem\dist\commands\mem-status.js` in `E:\Github\gopptx` resolved DB path to `C:\Users\Vegito\.gemini\gemini-mem\gopptx\memory.db`.
+- 2026-02-25 [TOOL] `npm run test:hooks` passes 4/4 after removing `zod` and using local validators.
+- 2026-02-25 [TOOL] `gemini extensions list` confirms installed extensions use `C:\Users\Vegito\.gemini\extensions\...`; current `gemini-mem` is linked from `E:\Github\gemini_mem` (Type: link).
+- 2026-02-25 [TOOL] `node --no-warnings E:\Github\gemini_mem\dist\commands\mem-status.js` in `E:\Github\gopptx` returns clean JSON without experimental warning lines.
+- 2026-02-25 [TOOL] `node --no-warnings E:\Github\gemini_mem\dist\commands\mem-status.js` and `...mem-last.js 3` now return readable text in `E:\Github\gopptx`; `--json` remains available.
+- 2026-02-25 [TOOL] `gemini extensions uninstall gemini-mem` reported success but returned a Windows `UV_HANDLE_CLOSING` assertion; re-link with `gemini extensions link E:\Github\gemini_mem --consent` succeeded and extension is enabled.
+- 2026-02-25 [TOOL] `npm run test:hooks` passes 5/5 after adding `/mem:*` no-write regression test.
+- 2026-02-25 [TOOL] `npm run test:mcp` passes 3/3 (initialize/tools-list and save/search/cite/context/error-path validation).
+- 2026-02-25 [TOOL] `npm run test` passes combined suites: hooks (5/5) + MCP (3/3).
+- 2026-02-25 [TOOL] `npm run test:mcp-http` passes 2/2 (HTTP initialize/tools-list and tools/call save/search flow).
+- 2026-02-25 [TOOL] `npm run test` now passes combined suites: hooks (5/5) + MCP stdio (3/3) + MCP HTTP (2/2).
+- 2026-02-25 [TOOL] `npm run test:mcp` now passes 4/4 after adding Antigravity `memory_end_session` -> project `GEMINI.md` sync test.
+- 2026-02-25 [TOOL] `npm run test` passes after switching to default-on project `GEMINI.md` sync + codebase snapshot generation.
+- 2026-02-25 [TOOL] Updated docs files: `README.md`, `CONTRIBUTING.md`, `CONTRIBUTOR.md`.
+- 2026-02-25 [TOOL] `npm run build` passed after documentation updates.
+- 2026-02-25 [TOOL] Created release automation/docs files: `.github/workflows/ci.yml`, `.github/workflows/release-extension.yml`, `PUBLISHING.md`, `LICENSE`.
+- 2026-02-25 [TOOL] `npm run test` passed after adding publishing workflows/docs files.

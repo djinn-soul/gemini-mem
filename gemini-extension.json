@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json.schemastore.org/gemini-extension.json",
+  "name": "gemini-mem",
+  "version": "0.1.0",
+  "description": "Persistent memory hooks for Gemini CLI",
+  "author": "gemini_mem",
+  "license": "MIT",
+  "mcpServers": {
+    "geminiMemServer": {
+      "command": "node",
+      "args": [
+        "${extensionPath}${/}dist${/}mcp${/}server.js"
+      ]
+    }
+  },
+  "gemini": {
+    "settings": {
+      "MEM_DB_PATH": {
+        "type": "string",
+        "description": "SQLite file path or root directory for per-project databases",
+        "default": "${HOME}/.gemini/gemini-mem"
+      },
+      "MEM_MAX_INJECT": {
+        "type": "number",
+        "description": "Maximum memories injected before each response",
+        "default": 5
+      },
+      "MEM_RERANK_CANDIDATES": {
+        "type": "number",
+        "description": "Number of local candidates sent to Gemini reranker",
+        "default": 20
+      },
+      "MEM_ENABLE_SESSIONSTART": {
+        "type": "boolean",
+        "description": "Enable SessionStart memory injection",
+        "default": true
+      },
+      "MEM_ENABLE_AFTERTOOL": {
+        "type": "boolean",
+        "description": "Reserved for future AfterTool capture",
+        "default": false
+      },
+      "MEM_LOG_LEVEL": {
+        "type": "string",
+        "description": "Hook logger level",
+        "default": "info"
+      },
+      "MEM_PROJECT_MODE": {
+        "type": "string",
+        "description": "Project identity mode: cwd-hash or manual",
+        "default": "cwd-hash"
+      },
+      "MEM_PROJECT_ID": {
+        "type": "string",
+        "description": "Manual project id when MEM_PROJECT_MODE=manual",
+        "default": ""
+      },
+      "MEM_MODEL": {
+        "type": "string",
+        "description": "Gemini model for summarize/rerank calls",
+        "default": ""
+      },
+      "MEM_SUMMARIZATION_TIMEOUT_MS": {
+        "type": "number",
+        "description": "Timeout for memory summarization calls",
+        "default": 60000
+      },
+      "MEM_RERANK_TIMEOUT_MS": {
+        "type": "number",
+        "description": "Timeout for memory rerank calls",
+        "default": 45000
+      },
+      "MEM_SUMMARY_INPUT_CHARS": {
+        "type": "number",
+        "description": "Max chars sent to summarizer from turn text",
+        "default": 4500
+      },
+      "MEM_MAX_INJECT_CHARS": {
+        "type": "number",
+        "description": "Max chars used for injected memory context",
+        "default": 5200
+      },
+      "MEM_GEMINI_COMMAND": {
+        "type": "string",
+        "description": "Gemini CLI executable name/path",
+        "default": "gemini"
+      },
+      "MEM_GEMINI_ARGS_JSON": {
+        "type": "string",
+        "description": "JSON array of extra args for gemini command invocation",
+        "default": "[]"
+      }
+    }
+  }
+}

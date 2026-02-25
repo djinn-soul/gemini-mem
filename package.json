@@ -1,0 +1,29 @@
+{
+  "name": "gemini-mem-extension",
+  "version": "0.1.0",
+  "description": "Gemini CLI extension for local memory capture and retrieval",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "if exist dist rmdir /s /q dist",
+    "check": "npm run build",
+    "test": "npm run test:hooks && npm run test:mcp && npm run test:mcp-http",
+    "test:hooks": "npm run build && node --test tests/hooks.integration.test.cjs",
+    "test:mcp": "npm run build && node --test tests/mcp.integration.test.cjs",
+    "test:mcp-http": "npm run build && node --test tests/mcp-http.integration.test.cjs",
+    "mcp:server": "node dist/mcp/server.js",
+    "mcp:http": "node dist/mcp/http-server.js",
+    "db:init": "node dist/cli/init-db.js",
+    "db:migrate": "node dist/cli/migrate.js",
+    "mem:status": "node dist/commands/mem-status.js",
+    "mem:search": "node dist/commands/mem-search.js",
+    "mem:last": "node dist/commands/mem-last.js",
+    "mem:prune": "node dist/commands/mem-prune.js"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^22.13.9",
+    "typescript": "^5.8.2"
+  }
+}

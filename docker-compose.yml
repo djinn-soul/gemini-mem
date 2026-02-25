@@ -1,0 +1,9 @@
+services:
+  gemini-mem:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace
+    command: npm run check
