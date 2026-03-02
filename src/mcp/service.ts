@@ -1,17 +1,11 @@
 import { randomUUID } from "node:crypto";
 import { getMemoryEnvConfig } from "../hooks/shared/env";
-import {
-  MCP_HTTP_DEFAULT_HOST,
-  MCP_HTTP_DEFAULT_PATH,
-  MCP_HTTP_DEFAULT_PORT
-} from "./constants";
 import { resolveMemoryDbPath } from "../memory/db-path";
 import { buildDedupeHash } from "../memory/dedupe";
 import { resolveProjectId } from "../memory/project-id";
 import { redactMemoryCard } from "../memory/redact";
 import { parseMemoryCard } from "../memory/schema";
 import { SqliteMemoryStore } from "../memory/store";
-import { syncAntigravityProjectContextFile } from "./project-context-file";
 
 type JsonObject = Record<string, unknown>;
 
@@ -71,56 +65,8 @@ function readInt(input: JsonObject, key: string, fallback: number, min: number, 
   return value;
 }
 
-function readBoolean(input: JsonObject, key: string, fallback: boolean): boolean {
-  const value = input[key];
-  if (value === undefined || value === null) {
-    return fallback;
-  }
-
-  if (typeof value !== "boolean") {
-    throw new Error(`${key} must be a boolean.`);
-  }
-
-  return value;
-}
-
 function stripPrivateSegments(text: string): string {
   return text.replace(/<private>[\s\S]*?<\/private>/gi, "[REDACTED_PRIVATE]");
-}
-
-function envBoolean(name: string): boolean {
-  const value = process.env[name];
-  return value === "1" || value === "true";
-}
-
-function resolveMcpServerUrl(input: JsonObject): string {
-  const direct = readString(input, "mcp_server_url");
-  if (direct) {
-    return direct;
-  }
-
-  const envUrl = process.env.MEM_MCP_PUBLIC_URL;
-  if (envUrl && envUrl.trim().length > 0) {
-    return envUrl.trim();
-  }
-
-  const host = process.env.MEM_MCP_HTTP_HOST ?? MCP_HTTP_DEFAULT_HOST;
-  const port = process.env.MEM_MCP_HTTP_PORT ?? `${MCP_HTTP_DEFAULT_PORT}`;
-  const path = process.env.MEM_MCP_HTTP_PATH ?? MCP_HTTP_DEFAULT_PATH;
-  return `http://${host}:${port}${path}`;
-}
-
-function shouldSyncProjectGeminiMd(input: JsonObject): boolean {
-  const explicit = input.write_project_gemini_md;
-  if (explicit !== undefined) {
-    return readBoolean(input, "write_project_gemini_md", false);
-  }
-
-  if (envBoolean("MEM_MCP_DISABLE_PROJECT_GEMINI_MD")) {
-    return false;
-  }
-
-  return true;
 }
 
 interface ProjectScope {
@@ -309,7 +255,7 @@ export class MemoryMcpService {
     const files = readStringArray(input, "files");
     const keyFacts = readStringArray(input, "key_facts");
 
-    const saveResult = this.memorySaveObservation({
+    return this.memorySaveObservation({
       ...input,
       title,
       summary,
@@ -320,27 +266,5 @@ export class MemoryMcpService {
       key_facts: keyFacts.length > 0 ? keyFacts : [summary.slice(0, 180)],
       source_hook: "MCP:SessionEnd"
     });
-
-    if (!shouldSyncProjectGeminiMd(input)) {
-      return {
-        ...saveResult,
-        gemini_md_updated: false
-      };
-    }
-
-    const scope = this.resolveScope(input);
-    const syncResult = syncAntigravityProjectContextFile({
-      projectCwd: scope.cwd,
-      projectId: scope.projectId,
-      mcpServerUrl: resolveMcpServerUrl(input),
-      sessionId,
-      summary
-    });
-
-    return {
-      ...saveResult,
-      gemini_md_updated: syncResult.updated,
-      gemini_md_path: syncResult.path
-    };
   }
 }

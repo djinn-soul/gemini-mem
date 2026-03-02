@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } = require("node:fs");
+const { mkdtempSync, rmSync } = require("node:fs");
 const { tmpdir } = require("node:os");
 const { join, resolve } = require("node:path");
 const { spawn } = require("node:child_process");
@@ -177,49 +177,6 @@ test("MCP tool validation errors return tool-level error payloads", async () => 
 
     assert.equal(badCall.result.isError, true);
     assert.ok(String(badCall.result.content[0].text).includes("query is required"));
-  } finally {
-    await server.close();
-    rmSync(tempDir, { recursive: true, force: true });
-  }
-});
-
-test("memory_end_session syncs project GEMINI.md by default with codebase snapshot", async () => {
-  const tempDir = mkdtempSync(join(tmpdir(), "gemini-mem-mcp-antigravity-"));
-  const projectCwd = join(tempDir, "project");
-  const server = startMcpServer(tempDir);
-
-  try {
-    mkdirSync(projectCwd, { recursive: true });
-    writeFileSync(join(projectCwd, "package.json"), JSON.stringify({ name: "demo", version: "1.0.0" }));
-    writeFileSync(join(projectCwd, "README.md"), "# demo");
-
-    await server.request("initialize", {
-      protocolVersion: "2025-03-26",
-      capabilities: {},
-      clientInfo: { name: "test-client", version: "0.0.1" }
-    });
-
-    const endSession = await server.request("tools/call", {
-      name: "memory_end_session",
-      arguments: {
-        project_cwd: projectCwd,
-        session_id: "ag-session-1",
-        summary: "Captured architecture learnings for next run.",
-        mcp_server_url: "http://127.0.0.1:3303/mcp"
-      }
-    });
-
-    const payload = endSession.result.structuredContent;
-    assert.equal(payload.gemini_md_updated, true);
-    assert.ok(typeof payload.gemini_md_path === "string");
-    assert.equal(existsSync(payload.gemini_md_path), true);
-
-    const content = readFileSync(payload.gemini_md_path, "utf8");
-    assert.ok(content.includes("## Antigravity MCP Memory"));
-    assert.ok(content.includes("http://127.0.0.1:3303/mcp"));
-    assert.ok(content.includes("memory_get_context"));
-    assert.ok(content.includes("### Codebase Snapshot (auto)"));
-    assert.ok(content.includes("Node.js/TypeScript"));
   } finally {
     await server.close();
     rmSync(tempDir, { recursive: true, force: true });

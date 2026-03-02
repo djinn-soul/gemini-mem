@@ -108,29 +108,16 @@ export function createMemoryTools(service: MemoryMcpService): McpTool[] {
     {
       definition: {
         name: "memory_end_session",
-        description:
-          "Store a final session summary card and sync project GEMINI.md context block by default.",
+        description: "Store a final session summary card in memory.",
         inputSchema: createJsonSchema(
           {
             ...PROJECT_SCOPE_PROPERTIES,
-            agent: {
-              type: "string",
-              description: "Set to 'antigravity' to auto-sync project GEMINI.md context block."
-            },
             session_id: { type: "string" },
             title: { type: "string" },
             summary: { type: "string", description: "Session summary text." },
             key_facts: { type: "array", items: { type: "string" } },
             tags: { type: "array", items: { type: "string" } },
-            files: { type: "array", items: { type: "string" } },
-            mcp_server_url: {
-              type: "string",
-              description: "MCP URL to write into project GEMINI.md section."
-            },
-            write_project_gemini_md: {
-              type: "boolean",
-              description: "Force enable/disable project GEMINI.md sync (default true)."
-            }
+            files: { type: "array", items: { type: "string" } }
           },
           ["summary"]
         )

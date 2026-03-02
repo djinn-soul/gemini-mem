@@ -1,55 +1,23 @@
 # Gemini Memory Extension
 
-Persistent local memory for Gemini CLI, with shared MCP access for Antigravity and other MCP clients.
+Gemini CLI extension that saves and retrieves project memory from local SQLite, with MCP tools that share the same memory DB.
 
-## What it does
+Official Gemini docs this README follows:
+- Writing extensions: https://geminicli.com/docs/extensions/writing-extensions/
+- Releasing extensions: https://geminicli.com/docs/extensions/releasing/
 
-- Captures useful outcomes from completed turns.
-- Retrieves and injects relevant prior memories before new responses.
-- Stores everything locally in SQLite (FTS5 for fast search).
-- Supports MCP tools so non-Gemini clients can use the same memory DB.
+## What You Get
 
-## Runtime flow
-
-1. `SessionStart` injects baseline context.
-2. `BeforeAgent` pulls top matches from SQLite and reranks.
-3. `AfterAgent` writes one memory card for the turn.
-4. `/mem:*` command prompts are ignored by `AfterAgent` to avoid self-noise.
-
-Default storage is project-scoped by folder name:
+- Hook-based memory capture (`AfterAgent`) and retrieval (`BeforeAgent`, `SessionStart`)
+- Slash commands for memory inspection and cleanup
+- MCP server tools for external agents/clients
+- Local per-project storage by default:
 
 ```text
 ${HOME}/.gemini/gemini-mem/<repo-folder>/memory.db
 ```
 
-Example:
-
-```text
-C:\Users\<user>\.gemini\gemini-mem\test\memory.db
-```
-
-## Codebase map
-
-```text
-src/
-  hooks/      # AfterAgent, BeforeAgent, SessionStart entrypoints
-  memory/     # schema, sqlite store, retrieval, dedupe, redaction, db-path
-  gemini/     # summarizer/reranker prompts + JSON validators
-  commands/   # mem-status, mem-search, mem-last, mem-prune
-  mcp/        # MCP tools + stdio/HTTP servers + project GEMINI.md sync
-  runtime/    # process and Gemini CLI adapters
-  cli/        # db init/migration scripts
-```
-
-## Install and run
-
-### For extension users (one-time install)
-
-- Install or link the extension in Gemini CLI.
-- Gemini executes hooks from the installed extension path under `~/.gemini/extensions/...`.
-- You do **not** run `npm install` in every target project repository.
-
-### For local development
+## Quick Start (Use This Extension)
 
 ```bash
 npm install
@@ -58,22 +26,36 @@ gemini extensions link .
 gemini extensions list
 ```
 
-If you change TypeScript source, rebuild before testing in Gemini:
+Then restart Gemini CLI.
 
-```bash
-npm run build
+## Daily Dev Loop
+
+1. Edit code.
+2. Rebuild: `npm run build`
+3. Test: `npm test`
+4. Restart Gemini CLI to pick up changes.
+
+## Project Layout
+
+```text
+src/
+  hooks/      # SessionStart, BeforeAgent, AfterAgent
+  memory/     # sqlite store, schema, retrieval, dedupe, redaction
+  gemini/     # summarizer/reranker prompts + validators
+  commands/   # mem-status, mem-search, mem-last, mem-prune
+  mcp/        # stdio and HTTP MCP servers + tool handlers
+  runtime/    # process and Gemini CLI adapters
+  cli/        # db init/migration scripts
 ```
 
-## Slash commands
-
-Defined in `commands/mem/*.toml`:
+## Slash Commands
 
 - `/mem:status`
 - `/mem:search <query>`
 - `/mem:last [limit]`
 - `/mem:prune [maxAgeDays] [importanceFloor]`
 
-Local script equivalents:
+Local equivalents:
 
 ```bash
 npm run mem:status
@@ -84,14 +66,7 @@ npm run mem:last -- 5 --json
 npm run mem:prune -- 30 2
 ```
 
-Notes:
-
-- `mem-status` and `mem-last` are human-readable by default, `--json` optional.
-- `mem-search` and `mem-prune` return JSON.
-
-## MCP server (Antigravity-ready)
-
-MCP tools:
+## MCP Tools
 
 - `memory_status`
 - `memory_get_context`
@@ -100,60 +75,58 @@ MCP tools:
 - `memory_cite`
 - `memory_end_session`
 
-Transports:
+Run transports:
 
-- stdio: `npm run mcp:server`
-- HTTP: `npm run mcp:http` (default `http://127.0.0.1:3303/mcp`)
+```bash
+npm run mcp:server
+npm run mcp:http
+```
 
-HTTP env overrides:
-
-- `MEM_MCP_HTTP_HOST`
-- `MEM_MCP_HTTP_PORT`
-- `MEM_MCP_HTTP_PATH`
-
-Antigravity-style server URL:
+Default HTTP endpoint:
 
 ```text
 http://127.0.0.1:3303/mcp
 ```
 
-Recommended Antigravity tool-use order:
+Recommended MCP usage order:
 
-1. Start task: `memory_get_context`
-2. During task: `memory_save_observation` for important decisions/findings
-3. End task: `memory_end_session`
-
-## Automatic project `GEMINI.md` for MCP sessions
-
-When `memory_end_session` includes `project_cwd`, this project writes or updates `<project>/GEMINI.md` by default with:
-
-- MCP URL
-- required memory tool flow
-- latest session summary
-- lightweight codebase snapshot (stacks/key files/top directories)
-
-Disable globally:
-
-```bash
-MEM_MCP_DISABLE_PROJECT_GEMINI_MD=true
-```
+1. `memory_get_context`
+2. `memory_save_observation`
+3. `memory_end_session`
 
 ## Config
 
-Gemini extension settings are defined in `gemini-extension.json` (for example `MEM_DB_PATH`, `MEM_MAX_INJECT`, timeouts, model, and project mode).
+Settings are defined in `gemini-extension.json` (DB path, model, limits, timeouts, project mode, command override).
 
-Hook contract:
+## Release Checklist (What To Do)
 
-- read JSON from stdin
-- logs to stderr
-- final JSON only on stdout
-- fail-open (`{}` on error)
+This repo already has workflows in `.github/workflows/` and release notes in `PUBLISHING.md`.
 
-## Test and validation
+1. Update version in both files:
+   - `package.json`
+   - `gemini-extension.json`
+2. Validate locally:
+   - `npm run build`
+   - `npm test`
+3. Commit and tag:
+   - `git tag vX.Y.Z`
+   - `git push origin main --tags`
+4. Let GitHub Actions create/publish the release artifacts.
+5. Install test from users' perspective:
+   - `gemini extensions install <repo-url>`
+   - or `gemini extensions install <repo-url> --ref=vX.Y.Z`
+
+For gallery discoverability (from official docs):
+
+- Keep repository public.
+- Add GitHub topic `gemini-cli-extension`.
+- Keep `gemini-extension.json` at repository root.
+
+## Verification Commands
 
 ```bash
 npm run build
-npm run test
+npm test
 npm run test:hooks
 npm run test:mcp
 npm run test:mcp-http
@@ -161,4 +134,4 @@ npm run test:mcp-http
 
 ## Contributing
 
-- See `CONTRIBUTING.md` for setup, checks, and invariants.
+See `CONTRIBUTING.md`.

@@ -6,11 +6,16 @@
 - 2026-02-25 [USER] New request: debug why live Gemini CLI sessions were not persisting memories automatically.
 - 2026-02-25 [USER] New request: refresh README with current codebase behavior and add contributor documentation.
 - 2026-02-25 [USER] New request: prepare GitHub/Gemini extension publishing assets via file creation only.
+- 2026-03-02 [USER] New request: remove all automatic project `GEMINI.md` processing and let users manage it manually.
+- 2026-03-02 [USER] New request: simplify README and align extension writing/releasing guidance with official Gemini docs.
 - 2026-02-25 [USER] Constraints: modular code; avoid Node-only coupling in core logic; fail-open hook behavior.
 - 2026-02-25 [TOOL] Implementation scaffold completed from empty repository; build and command validation executed locally.
 - 2026-02-25 [TOOL] Docker daemon unavailable on host, so verification ran via local Node tooling.
 
 ## Done (recent)
+- 2026-03-02 [CODE] Rewrote `README.md` into a concise quickstart/dev/release checklist aligned to Gemini extension writing and releasing docs.
+- 2026-03-02 [CODE] Removed MCP `memory_end_session` project `GEMINI.md` sync logic and deleted `src/mcp/project-context-file.ts` + `src/mcp/codebase-profile.ts`.
+- 2026-03-02 [CODE] Updated MCP tool schema/docs/tests to remove `GEMINI.md` sync options and assertions.
 - 2026-02-25 [CODE] Added GitHub Actions CI workflow (`.github/workflows/ci.yml`) for build/test on push/PR.
 - 2026-02-25 [CODE] Added GitHub release workflow (`.github/workflows/release-extension.yml`) to build/test/package and publish tag releases.
 - 2026-02-25 [CODE] Added `PUBLISHING.md` with GitHub + Gemini extension release procedure and install commands.
@@ -80,7 +85,8 @@
 - 2026-02-25 D012 ACTIVE [CODE]: MCP integration is implemented as a stdio JSON-RPC server without adding runtime package dependencies; it reuses existing memory storage modules.
 - 2026-02-25 D013 ACTIVE [CODE]: MCP supports dual transports (stdio + HTTP); protocol constants are centralized and server version is derived from package metadata.
 - 2026-02-25 D014 ACTIVE [CODE]: Automatic project context-file generation is scoped to MCP session-end calls for Antigravity (`agent: "antigravity"`), not Gemini CLI hooks.
-- 2026-02-25 D015 ACTIVE [CODE]: Project `GEMINI.md` generation is now default behavior for MCP `memory_end_session` and includes a lightweight codebase snapshot; Gemini CLI hooks remain unaffected.
+- 2026-02-25 D015 SUPERSEDED [CODE]: Project `GEMINI.md` generation is now default behavior for MCP `memory_end_session` and includes a lightweight codebase snapshot; Gemini CLI hooks remain unaffected.
+- 2026-03-02 D017 ACTIVE [CODE]: MCP `memory_end_session` only stores session summaries in memory; it no longer reads/writes project `GEMINI.md`.
 - 2026-02-25 D016 ACTIVE [CODE]: GitHub tag releases (`v*`) are the canonical publishing channel; release workflow enforces version parity across tag, `package.json`, and `gemini-extension.json`.
 
 ## Open questions
@@ -88,6 +94,9 @@
 - 2026-02-25 [ASSUMPTION] `gemini extensions link . --consent` sometimes emits a `uv` assertion after reporting "already installed"; behavior appears non-blocking but needs upstream confirmation.
 
 ## Receipts
+- 2026-03-02 [TOOL] `npm test` passed after README rewrite: hooks (5/5) + MCP stdio (3/3) + MCP HTTP (2/2).
+- 2026-03-02 [TOOL] `npm run build` passed after removing project `GEMINI.md` sync modules and service calls.
+- 2026-03-02 [TOOL] `npm test` passed: hooks (5/5) + MCP stdio (3/3) + MCP HTTP (2/2) with no `GEMINI.md` sync tests.
 - 2026-02-25 [TOOL] `Get-ChildItem -Force` in `E:\Github\gemini_mem` returned empty.
 - 2026-02-25 [TOOL] `rg --files` returned no tracked files.
 - 2026-02-25 [TOOL] `docker compose run --rm gemini-mem npm run build` failed because Docker daemon was not running.
