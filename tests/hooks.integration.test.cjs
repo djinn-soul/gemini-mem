@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { mkdtempSync, rmSync } = require("node:fs");
+const { existsSync, mkdtempSync, readFileSync, rmSync } = require("node:fs");
 const { tmpdir } = require("node:os");
 const { join, resolve } = require("node:path");
 const { spawnSync } = require("node:child_process");
@@ -277,6 +277,47 @@ test("SessionStart returns baseline context and respects disable flag", () => {
     });
 
     assert.equal(disabledOutput.stdout, "{}");
+  } finally {
+    rmSync(tempDir, { recursive: true, force: true });
+  }
+});
+
+test("Hook telemetry writes per-project hook.log only when enabled", () => {
+  const tempDir = mkdtempSync(join(tmpdir(), "gemini-mem-telemetry-"));
+  try {
+    const dbRoot = join(tempDir, "db-root");
+    const hookScript = resolve(repoRoot, "dist", "hooks", "session-start.js");
+    const input = {
+      cwd: repoRoot,
+      session_id: "sess-telemetry",
+      timestamp: "2026-03-02T12:00:00.000Z"
+    };
+
+    const envDisabled = buildEnv(dbRoot, {
+      MEM_ENABLE_SESSIONSTART: "false",
+      MEM_HOOK_TELEMETRY: "false"
+    });
+    runNodeScript(hookScript, envDisabled, input);
+
+    const projectDir = join(dbRoot, "gemini_mem");
+    const logPath = join(projectDir, "hook.log");
+    assert.equal(existsSync(logPath), false, "Telemetry file should not exist when disabled");
+
+    const envEnabled = buildEnv(dbRoot, {
+      MEM_ENABLE_SESSIONSTART: "false",
+      MEM_HOOK_TELEMETRY: "true"
+    });
+    runNodeScript(hookScript, envEnabled, input);
+
+    assert.equal(existsSync(logPath), true, "Telemetry file should exist when enabled");
+    const lines = readFileSync(logPath, "utf8")
+      .trim()
+      .split(/\r?\n/)
+      .map((line) => JSON.parse(line));
+
+    assert.ok(lines.some((line) => line.hook === "SessionStart" && line.event === "start"));
+    assert.ok(lines.some((line) => line.hook === "SessionStart" && line.event === "disabled"));
+    assert.ok(lines.every((line) => line.projectId === "integration-project"));
   } finally {
     rmSync(tempDir, { recursive: true, force: true });
   }

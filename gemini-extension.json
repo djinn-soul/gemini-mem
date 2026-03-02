@@ -12,6 +12,11 @@
         "description": "SQLite file path or root directory for per-project databases",
         "default": "${HOME}/.gemini/gemini-mem"
       },
+      "MEM_HOOK_TELEMETRY": {
+        "type": "boolean",
+        "description": "Enable best-effort per-project hook telemetry log at <project>/hook.log",
+        "default": false
+      },
       "MEM_MAX_INJECT": {
         "type": "number",
         "description": "Maximum memories injected before each response",

@@ -13,6 +13,9 @@
 - 2026-02-25 [TOOL] Docker daemon unavailable on host, so verification ran via local Node tooling.
 
 ## Done (recent)
+- 2026-03-02 [CODE] Added opt-in hook telemetry (`MEM_HOOK_TELEMETRY`) that writes per-project JSONL events/failures to `<project-db-folder>/hook.log`.
+- 2026-03-02 [CODE] Added `src/hooks/shared/telemetry.ts` and instrumented `AfterAgent`, `BeforeAgent`, and `SessionStart` for start/skip/success/error events.
+- 2026-03-02 [CODE] Added hook telemetry integration test coverage in `tests/hooks.integration.test.cjs`.
 - 2026-03-02 [CODE] Added `scripts/hook-runner.cjs` and switched `hooks/hooks.json` commands to runner-based execution with fail-open output and actionable missing-build messages.
 - 2026-03-02 [CODE] Decoupled MCP from hook runtime by removing `mcpServers` auto-registration from `gemini-extension.json`; hooks now run independently of MCP discovery state.
 - 2026-03-02 [CODE] Updated release packaging/validation to include `scripts/hook-runner.cjs` in archives and enforce its presence in workflow checks.
@@ -94,6 +97,7 @@
 - 2026-03-02 D017 ACTIVE [CODE]: MCP `memory_end_session` only stores session summaries in memory; it no longer reads/writes project `GEMINI.md`.
 - 2026-03-02 D018 ACTIVE [CODE]: Hook execution goes through a stable JS runner in `scripts/` so missing `dist/hooks/*` can fail-open with explicit remediation guidance instead of raw module errors.
 - 2026-03-02 D019 ACTIVE [CODE]: MCP server is no longer auto-registered in extension manifest; MCP usage is explicit/manual to avoid hook-runtime coupling.
+- 2026-03-02 D020 ACTIVE [CODE]: Hook telemetry is opt-in (`MEM_HOOK_TELEMETRY=false` by default) and must be best-effort only (never fail hook execution).
 - 2026-02-25 D016 ACTIVE [CODE]: GitHub tag releases (`v*`) are the canonical publishing channel; release workflow enforces version parity across tag, `package.json`, and `gemini-extension.json`.
 
 ## Open questions
@@ -101,6 +105,7 @@
 - 2026-02-25 [ASSUMPTION] `gemini extensions link . --consent` sometimes emits a `uv` assertion after reporting "already installed"; behavior appears non-blocking but needs upstream confirmation.
 
 ## Receipts
+- 2026-03-02 [TOOL] `npm run test:hooks` passed 6/6 after telemetry instrumentation and new opt-in telemetry test.
 - 2026-03-02 [TOOL] `npm run check:pr` passed after hook-runner + MCP decoupling changes: typecheck, line-limit check, hooks/MCP stdio/MCP HTTP tests all green.
 - 2026-03-02 [TOOL] `npm run check:pr` passed: typecheck + max-line policy + hooks/MCP test suites.
 - 2026-03-02 [TOOL] Local workflow sanity check passed: `node -e ...` confirmed updated release workflow includes archive validation step.

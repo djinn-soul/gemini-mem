@@ -6,6 +6,7 @@ import { redactMemoryCard } from "../memory/redact";
 import { getMemoryEnvConfig } from "./shared/env";
 import { readStdinJson, writeHookOutput } from "./shared/hook-io";
 import { createHookRuntimeContext } from "./shared/context";
+import { writeHookTelemetry } from "./shared/telemetry";
 import type { AfterAgentHookInput } from "./shared/types";
 
 function isMemCommandPrompt(prompt: string): boolean {
@@ -33,7 +34,11 @@ async function main(): Promise<void> {
     gemini_mem_internal: process.env.GEMINI_MEM_INTERNAL ?? ""
   });
 
+  const config = getMemoryEnvConfig();
+  writeHookTelemetry(config, input, { hook: "AfterAgent", event: "start" });
+
   if (process.env.GEMINI_MEM_INTERNAL === "1") {
+    writeHookTelemetry(config, input, { hook: "AfterAgent", event: "skip_internal" });
     writeDebugTrace({
       ts: new Date().toISOString(),
       stage: "skip_internal"
@@ -43,6 +48,7 @@ async function main(): Promise<void> {
   }
 
   if (isMemCommandPrompt(input.prompt ?? "")) {
+    writeHookTelemetry(config, input, { hook: "AfterAgent", event: "skip_mem_command" });
     writeDebugTrace({
       ts: new Date().toISOString(),
       stage: "skip_mem_command",
@@ -52,7 +58,6 @@ async function main(): Promise<void> {
     return;
   }
 
-  const config = getMemoryEnvConfig();
   const context = createHookRuntimeContext(config, input);
 
   try {
@@ -81,6 +86,7 @@ async function main(): Promise<void> {
 
     if (inserted) {
       context.logger.debug("Stored memory from AfterAgent event.");
+      writeHookTelemetry(config, input, { hook: "AfterAgent", event: "stored" });
       writeDebugTrace({
         ts: new Date().toISOString(),
         stage: "stored",
@@ -88,6 +94,7 @@ async function main(): Promise<void> {
       });
     } else {
       context.logger.debug("Skipped duplicate memory from AfterAgent event.");
+      writeHookTelemetry(config, input, { hook: "AfterAgent", event: "duplicate" });
       writeDebugTrace({
         ts: new Date().toISOString(),
         stage: "stored",
@@ -97,6 +104,7 @@ async function main(): Promise<void> {
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     context.logger.error(`AfterAgent failed: ${message}`);
+    writeHookTelemetry(config, input, { hook: "AfterAgent", event: "error", message });
     writeDebugTrace({
       ts: new Date().toISOString(),
       stage: "error",

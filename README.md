@@ -102,6 +102,11 @@ Recommended MCP usage order:
 
 Settings are defined in `gemini-extension.json` (DB path, model, limits, timeouts, project mode, command override).
 
+Opt-in hook telemetry:
+
+- Set `MEM_HOOK_TELEMETRY=true`
+- Writes JSONL events and failures to `<project-db-folder>/hook.log` (for example `${HOME}/.gemini/gemini-mem/<repo>/hook.log`)
+
 ## Release Checklist (What To Do)
 
 This repo already has workflows in `.github/workflows/` and release notes in `PUBLISHING.md`.

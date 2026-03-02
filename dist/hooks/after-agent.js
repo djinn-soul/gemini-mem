@@ -8,6 +8,7 @@ const redact_1 = require("../memory/redact");
 const env_1 = require("./shared/env");
 const hook_io_1 = require("./shared/hook-io");
 const context_1 = require("./shared/context");
+const telemetry_1 = require("./shared/telemetry");
 function isMemCommandPrompt(prompt) {
     return /^\/mem(?::|$)/i.test(prompt.trim());
 }
@@ -29,7 +30,10 @@ async function main() {
         has_prompt_response: typeof input.prompt_response === "string" && input.prompt_response.length > 0,
         gemini_mem_internal: process.env.GEMINI_MEM_INTERNAL ?? ""
     });
+    const config = (0, env_1.getMemoryEnvConfig)();
+    (0, telemetry_1.writeHookTelemetry)(config, input, { hook: "AfterAgent", event: "start" });
     if (process.env.GEMINI_MEM_INTERNAL === "1") {
+        (0, telemetry_1.writeHookTelemetry)(config, input, { hook: "AfterAgent", event: "skip_internal" });
         writeDebugTrace({
             ts: new Date().toISOString(),
             stage: "skip_internal"
@@ -38,6 +42,7 @@ async function main() {
         return;
     }
     if (isMemCommandPrompt(input.prompt ?? "")) {
+        (0, telemetry_1.writeHookTelemetry)(config, input, { hook: "AfterAgent", event: "skip_mem_command" });
         writeDebugTrace({
             ts: new Date().toISOString(),
             stage: "skip_mem_command",
@@ -46,7 +51,6 @@ async function main() {
         (0, hook_io_1.writeHookOutput)({});
         return;
     }
-    const config = (0, env_1.getMemoryEnvConfig)();
     const context = (0, context_1.createHookRuntimeContext)(config, input);
     try {
         const card = await (0, summarizer_1.summarizeTurnWithGemini)({
@@ -71,6 +75,7 @@ async function main() {
         });
         if (inserted) {
             context.logger.debug("Stored memory from AfterAgent event.");
+            (0, telemetry_1.writeHookTelemetry)(config, input, { hook: "AfterAgent", event: "stored" });
             writeDebugTrace({
                 ts: new Date().toISOString(),
                 stage: "stored",
@@ -79,6 +84,7 @@ async function main() {
         }
         else {
             context.logger.debug("Skipped duplicate memory from AfterAgent event.");
+            (0, telemetry_1.writeHookTelemetry)(config, input, { hook: "AfterAgent", event: "duplicate" });
             writeDebugTrace({
                 ts: new Date().toISOString(),
                 stage: "stored",
@@ -89,6 +95,7 @@ async function main() {
     catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         context.logger.error(`AfterAgent failed: ${message}`);
+        (0, telemetry_1.writeHookTelemetry)(config, input, { hook: "AfterAgent", event: "error", message });
         writeDebugTrace({
             ts: new Date().toISOString(),
             stage: "error",

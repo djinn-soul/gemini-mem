@@ -48,6 +48,7 @@ function parseJsonStringArray(value) {
 function getMemoryEnvConfig() {
     return {
         dbPath: process.env.MEM_DB_PATH ?? (0, node_path_1.join)((0, node_os_1.homedir)(), ".gemini", "gemini-mem"),
+        hookTelemetry: parseBooleanWithDefault(process.env.MEM_HOOK_TELEMETRY, false),
         maxInject: parseIntWithDefault(process.env.MEM_MAX_INJECT, 5),
         rerankCandidates: parseIntWithDefault(process.env.MEM_RERANK_CANDIDATES, 20),
         enableSessionStart: parseBooleanWithDefault(process.env.MEM_ENABLE_SESSIONSTART, true),

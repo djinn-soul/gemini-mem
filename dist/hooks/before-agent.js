@@ -5,17 +5,21 @@ const retrieve_1 = require("../memory/retrieve");
 const env_1 = require("./shared/env");
 const hook_io_1 = require("./shared/hook-io");
 const context_1 = require("./shared/context");
+const telemetry_1 = require("./shared/telemetry");
 async function main() {
     const input = await (0, hook_io_1.readStdinJson)();
+    const config = (0, env_1.getMemoryEnvConfig)();
+    (0, telemetry_1.writeHookTelemetry)(config, input, { hook: "BeforeAgent", event: "start" });
     if (process.env.GEMINI_MEM_INTERNAL === "1") {
+        (0, telemetry_1.writeHookTelemetry)(config, input, { hook: "BeforeAgent", event: "skip_internal" });
         (0, hook_io_1.writeHookOutput)({});
         return;
     }
-    const config = (0, env_1.getMemoryEnvConfig)();
     const context = (0, context_1.createHookRuntimeContext)(config, input);
     try {
         const candidates = context.store.searchCandidates(context.projectId, input.prompt, config.rerankCandidates);
         if (candidates.length === 0) {
+            (0, telemetry_1.writeHookTelemetry)(config, input, { hook: "BeforeAgent", event: "no_candidates" });
             (0, hook_io_1.writeHookOutput)({});
             return;
         }
@@ -29,11 +33,13 @@ async function main() {
             commandArgs: config.geminiArgs
         });
         if (selectedIds.length === 0) {
+            (0, telemetry_1.writeHookTelemetry)(config, input, { hook: "BeforeAgent", event: "no_selected_ids" });
             (0, hook_io_1.writeHookOutput)({});
             return;
         }
         const selectedMemories = context.store.getMemoriesByIds(context.projectId, selectedIds);
         if (selectedMemories.length === 0) {
+            (0, telemetry_1.writeHookTelemetry)(config, input, { hook: "BeforeAgent", event: "no_selected_memories" });
             (0, hook_io_1.writeHookOutput)({});
             return;
         }
@@ -43,10 +49,12 @@ async function main() {
                 additionalContext
             }
         });
+        (0, telemetry_1.writeHookTelemetry)(config, input, { hook: "BeforeAgent", event: "context_injected" });
     }
     catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         context.logger.error(`BeforeAgent failed: ${message}`);
+        (0, telemetry_1.writeHookTelemetry)(config, input, { hook: "BeforeAgent", event: "error", message });
         (0, hook_io_1.writeHookOutput)({});
     }
     finally {

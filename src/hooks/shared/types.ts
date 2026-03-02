@@ -27,6 +27,7 @@ export interface SessionStartHookInput extends HookInputBase {
 
 export interface MemoryEnvConfig {
   dbPath: string;
+  hookTelemetry: boolean;
   maxInject: number;
   rerankCandidates: number;
   enableSessionStart: boolean;
