@@ -37,6 +37,7 @@ jobs:
           test -f README.md
           test -f LICENSE
           test -f hooks/hooks.json
+          test -f scripts/hook-runner.cjs
           test -d commands
           test -d dist
 
@@ -71,12 +72,13 @@ jobs:
           VERSION="${GITHUB_REF_NAME#v}"
           STAGE="out/stage"
           mkdir -p "${STAGE}"
-          mkdir -p "${STAGE}/dist" "${STAGE}/hooks" "${STAGE}/commands"
+          mkdir -p "${STAGE}/dist" "${STAGE}/hooks" "${STAGE}/commands" "${STAGE}/scripts"
 
           cp gemini-extension.json "${STAGE}/"
           cp README.md "${STAGE}/"
           cp LICENSE "${STAGE}/"
           cp hooks/hooks.json "${STAGE}/hooks/hooks.json"
+          cp scripts/hook-runner.cjs "${STAGE}/scripts/hook-runner.cjs"
           cp -R commands/. "${STAGE}/commands/"
           cp -R dist/. "${STAGE}/dist/"
 
@@ -101,6 +103,7 @@ jobs:
           grep -qx "README.md" out/tar-contents.txt
           grep -qx "LICENSE" out/tar-contents.txt
           grep -qx "hooks/hooks.json" out/tar-contents.txt
+          grep -qx "scripts/hook-runner.cjs" out/tar-contents.txt
           grep -q "^commands/" out/tar-contents.txt
           grep -q "^dist/" out/tar-contents.txt
 
@@ -108,6 +111,7 @@ jobs:
           grep -qx "README.md" out/zip-contents.txt
           grep -qx "LICENSE" out/zip-contents.txt
           grep -qx "hooks/hooks.json" out/zip-contents.txt
+          grep -qx "scripts/hook-runner.cjs" out/zip-contents.txt
           grep -q "^commands/" out/zip-contents.txt
           grep -q "^dist/" out/zip-contents.txt
 

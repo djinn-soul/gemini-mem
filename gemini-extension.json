@@ -5,14 +5,6 @@
   "description": "Persistent memory hooks for Gemini CLI",
   "author": "gemini_mem",
   "license": "MIT",
-  "mcpServers": {
-    "geminiMemServer": {
-      "command": "node",
-      "args": [
-        "${extensionPath}${/}dist${/}mcp${/}server.js"
-      ]
-    }
-  },
   "gemini": {
     "settings": {
       "MEM_DB_PATH": {

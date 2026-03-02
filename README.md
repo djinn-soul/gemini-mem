@@ -10,7 +10,7 @@ Official Gemini docs this README follows:
 
 - Hook-based memory capture (`AfterAgent`) and retrieval (`BeforeAgent`, `SessionStart`)
 - Slash commands for memory inspection and cleanup
-- MCP server tools for external agents/clients
+- Optional MCP server tools for external agents/clients
 - Local per-project storage by default:
 
 ```text
@@ -68,6 +68,8 @@ npm run mem:prune -- 30 2
 
 ## MCP Tools
 
+MCP is decoupled from hook runtime in this extension build. Hook execution does not require MCP server discovery.
+
 - `memory_status`
 - `memory_get_context`
 - `memory_search`
@@ -81,6 +83,8 @@ Run transports:
 npm run mcp:server
 npm run mcp:http
 ```
+
+If you want Gemini CLI to auto-discover this MCP server, register it explicitly in your user/project Gemini MCP settings.
 
 Default HTTP endpoint:
 

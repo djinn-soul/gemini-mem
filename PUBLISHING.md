@@ -36,6 +36,7 @@ git push origin v0.1.1
 - `README.md`
 - `LICENSE`
 - `hooks/hooks.json`
+- `scripts/hook-runner.cjs`
 - `commands/**`
 - `dist/**`
 

@@ -9,7 +9,7 @@
             "name": "gemini-mem-after-agent",
             "description": "Capture and persist durable memory from completed turns",
             "timeout": 180000,
-            "command": "node \"${extensionPath}${/}dist${/}hooks${/}after-agent.js\""
+            "command": "node \"${extensionPath}${/}scripts${/}hook-runner.cjs\" after-agent"
           }
         ]
       }
@@ -23,7 +23,7 @@
             "name": "gemini-mem-before-agent",
             "description": "Inject relevant stored memories before response generation",
             "timeout": 120000,
-            "command": "node \"${extensionPath}${/}dist${/}hooks${/}before-agent.js\""
+            "command": "node \"${extensionPath}${/}scripts${/}hook-runner.cjs\" before-agent"
           }
         ]
       }
@@ -37,7 +37,7 @@
             "name": "gemini-mem-session-start",
             "description": "Inject baseline project memory at session start",
             "timeout": 20000,
-            "command": "node \"${extensionPath}${/}dist${/}hooks${/}session-start.js\""
+            "command": "node \"${extensionPath}${/}scripts${/}hook-runner.cjs\" session-start"
           }
         ]
       }
