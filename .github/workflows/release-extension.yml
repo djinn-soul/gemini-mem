@@ -40,6 +40,11 @@ jobs:
           test -d commands
           test -d dist
 
+      - name: Verify dist is committed in tag source
+        shell: bash
+        run: |
+          test -n "$(git ls-files dist)"
+
       - name: Compute release metadata
         id: meta
         shell: bash
