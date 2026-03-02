@@ -23,8 +23,5 @@ jobs:
       - name: Install
         run: npm ci
 
-      - name: Build
-        run: npm run build
-
-      - name: Test
-        run: npm run test
+      - name: PR quality checks
+        run: npm run check:pr

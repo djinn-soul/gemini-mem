@@ -25,7 +25,9 @@ git push origin v0.1.1
    - `npm ci`
    - build + tests
    - version consistency check (tag vs both version files)
+   - required codebase file/folder checks (`gemini-extension.json`, `README.md`, `LICENSE`, `hooks/`, `commands/`, `dist/`)
    - release archive creation (`.tar.gz` and `.zip`)
+   - archive structure validation (manifest and required files at archive root layout)
    - GitHub Release publication with assets
 
 ## What gets packaged in release assets
@@ -49,6 +51,12 @@ Install pinned to a tag:
 
 ```bash
 gemini extensions install owner/repo --ref v0.1.1
+```
+
+Install latest prerelease (if release tag is semver prerelease like `v0.2.0-rc.1`):
+
+```bash
+gemini extensions install owner/repo --pre-release
 ```
 
 After release + topic setup, the extension can be indexed by extension directories/crawlers that track Gemini CLI extension repos.

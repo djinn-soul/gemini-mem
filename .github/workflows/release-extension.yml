@@ -30,8 +30,32 @@ jobs:
         run: |
           node -e "const tag=process.env.GITHUB_REF_NAME.replace(/^v/,'');const p=require('./package.json').version;const m=require('./gemini-extension.json').version;if(tag!==p||tag!==m){console.error(`Version mismatch. tag=${tag}, package.json=${p}, gemini-extension.json=${m}`);process.exit(1);}"
 
+      - name: Verify required extension files exist
+        shell: bash
+        run: |
+          test -f gemini-extension.json
+          test -f README.md
+          test -f LICENSE
+          test -f hooks/hooks.json
+          test -d commands
+          test -d dist
+
+      - name: Compute release metadata
+        id: meta
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          if [[ "${VERSION}" == *"-"* ]]; then
+            echo "is_prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Build
         run: npm run build
+
+      - name: Type and codebase checks
+        run: npm run typecheck && npm run check:max-lines
 
       - name: Test
         run: npm run test
@@ -58,10 +82,35 @@ jobs:
           )
           sha256sum out/gemini-mem-"${VERSION}".tar.gz out/gemini-mem-"${VERSION}".zip > out/SHA256SUMS.txt
 
+      - name: Validate release archive structure
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          TAR_FILE="out/gemini-mem-${VERSION}.tar.gz"
+          ZIP_FILE="out/gemini-mem-${VERSION}.zip"
+
+          tar -tzf "${TAR_FILE}" > out/tar-contents.txt
+          unzip -Z1 "${ZIP_FILE}" > out/zip-contents.txt
+
+          grep -qx "gemini-extension.json" out/tar-contents.txt
+          grep -qx "README.md" out/tar-contents.txt
+          grep -qx "LICENSE" out/tar-contents.txt
+          grep -qx "hooks/hooks.json" out/tar-contents.txt
+          grep -q "^commands/" out/tar-contents.txt
+          grep -q "^dist/" out/tar-contents.txt
+
+          grep -qx "gemini-extension.json" out/zip-contents.txt
+          grep -qx "README.md" out/zip-contents.txt
+          grep -qx "LICENSE" out/zip-contents.txt
+          grep -qx "hooks/hooks.json" out/zip-contents.txt
+          grep -q "^commands/" out/zip-contents.txt
+          grep -q "^dist/" out/zip-contents.txt
+
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
+          prerelease: ${{ steps.meta.outputs.is_prerelease }}
           files: |
             out/gemini-mem-*.tar.gz
             out/gemini-mem-*.zip

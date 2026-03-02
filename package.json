@@ -1,13 +1,16 @@
 {
   "name": "gemini-mem-extension",
-  "version": "0.1.0",
+  "version": "0.1.1-rc.1",
   "description": "Gemini CLI extension for local memory capture and retrieval",
   "private": true,
   "type": "commonjs",
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
     "clean": "if exist dist rmdir /s /q dist",
     "check": "npm run build",
+    "check:max-lines": "node scripts/check-max-lines.cjs",
+    "check:pr": "npm run typecheck && npm run check:max-lines && npm run test",
     "test": "npm run test:hooks && npm run test:mcp && npm run test:mcp-http",
     "test:hooks": "npm run build && node --test tests/hooks.integration.test.cjs",
     "test:mcp": "npm run build && node --test tests/mcp.integration.test.cjs",

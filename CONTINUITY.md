@@ -13,6 +13,8 @@
 - 2026-02-25 [TOOL] Docker daemon unavailable on host, so verification ran via local Node tooling.
 
 ## Done (recent)
+- 2026-03-02 [CODE] Added pre-PR TypeScript quality gate: `typecheck` + max-lines validator + full tests via `npm run check:pr`, wired into CI and release workflows.
+- 2026-03-02 [CODE] Strengthened release automation with required-file checks, prerelease tag detection, and tar/zip archive structure validation before GitHub Release publish.
 - 2026-03-02 [CODE] Rewrote `README.md` into a concise quickstart/dev/release checklist aligned to Gemini extension writing and releasing docs.
 - 2026-03-02 [CODE] Removed MCP `memory_end_session` project `GEMINI.md` sync logic and deleted `src/mcp/project-context-file.ts` + `src/mcp/codebase-profile.ts`.
 - 2026-03-02 [CODE] Updated MCP tool schema/docs/tests to remove `GEMINI.md` sync options and assertions.
@@ -94,6 +96,8 @@
 - 2026-02-25 [ASSUMPTION] `gemini extensions link . --consent` sometimes emits a `uv` assertion after reporting "already installed"; behavior appears non-blocking but needs upstream confirmation.
 
 ## Receipts
+- 2026-03-02 [TOOL] `npm run check:pr` passed: typecheck + max-line policy + hooks/MCP test suites.
+- 2026-03-02 [TOOL] Local workflow sanity check passed: `node -e ...` confirmed updated release workflow includes archive validation step.
 - 2026-03-02 [TOOL] `npm test` passed after README rewrite: hooks (5/5) + MCP stdio (3/3) + MCP HTTP (2/2).
 - 2026-03-02 [TOOL] `npm run build` passed after removing project `GEMINI.md` sync modules and service calls.
 - 2026-03-02 [TOOL] `npm test` passed: hooks (5/5) + MCP stdio (3/3) + MCP HTTP (2/2) with no `GEMINI.md` sync tests.
