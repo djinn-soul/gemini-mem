@@ -34,5 +34,12 @@ function toFtsQuery(terms) {
     if (terms.length === 0) {
         return "";
     }
-    return terms.map((term) => `${term}*`).join(" OR ");
+    return terms
+        .map((term) => {
+        // Quote terms containing FTS5 special characters (hyphens, slashes, etc.)
+        // to prevent them being interpreted as operators or column references
+        const needsQuoting = /[^a-z0-9_]/.test(term);
+        return needsQuoting ? `"${term}"*` : `${term}*`;
+    })
+        .join(" OR ");
 }

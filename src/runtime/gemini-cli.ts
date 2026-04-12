@@ -50,12 +50,19 @@ function resolveGeminiCommand(command: string, args: string[]): ResolvedCommand 
   const cmdCandidates = getWindowsGeminiEntrypointCandidates(command);
 
   for (const cmdPath of cmdCandidates) {
-    const geminiJsPath = join(dirname(cmdPath), "node_modules", "@google", "gemini-cli", "dist", "index.js");
-    if (existsSync(geminiJsPath)) {
-      return {
-        command: process.execPath,
-        args: [geminiJsPath, ...args]
-      };
+    const base = dirname(cmdPath);
+    // Try known entrypoint locations in order of preference (newer builds first)
+    const candidates = [
+      join(base, "node_modules", "@google", "gemini-cli", "bundle", "gemini.js"),
+      join(base, "node_modules", "@google", "gemini-cli", "dist", "index.js")
+    ];
+    for (const geminiJsPath of candidates) {
+      if (existsSync(geminiJsPath)) {
+        return {
+          command: process.execPath,
+          args: ["--no-warnings=DEP0040", geminiJsPath, ...args]
+        };
+      }
     }
   }
 
