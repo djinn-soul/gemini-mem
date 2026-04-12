@@ -15,6 +15,10 @@
     "test:hooks": "npm run build && node --test tests/hooks.integration.test.cjs",
     "test:mcp": "npm run build && node --test tests/mcp.integration.test.cjs",
     "test:mcp-http": "npm run build && node --test tests/mcp-http.integration.test.cjs",
+    "test:bun": "bun run build && bun test tests/hooks.integration.test.cjs && bun test tests/mcp.integration.test.cjs && bun test tests/mcp-http.integration.test.cjs",
+    "test:bun:hooks": "bun run build && bun test tests/hooks.integration.test.cjs",
+    "test:bun:mcp": "bun run build && bun test tests/mcp.integration.test.cjs",
+    "test:bun:mcp-http": "bun run build && bun test tests/mcp-http.integration.test.cjs",
     "mcp:server": "node dist/mcp/server.js",
     "mcp:http": "node dist/mcp/http-server.js",
     "db:init": "node dist/cli/init-db.js",
@@ -24,8 +28,11 @@
     "mem:last": "node dist/commands/mem-last.js",
     "mem:prune": "node dist/commands/mem-prune.js"
   },
-  "dependencies": {},
+  "dependencies": {
+    "better-sqlite3": "^12.8.0"
+  },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^22.13.9",
     "typescript": "^5.8.2"
   }

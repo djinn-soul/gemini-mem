@@ -1,4 +1,4 @@
-const test = require("node:test");
+const test = typeof globalThis.Bun !== "undefined" ? require("bun:test").test : require("node:test");
 const assert = require("node:assert/strict");
 const { mkdtempSync, rmSync } = require("node:fs");
 const { tmpdir } = require("node:os");
@@ -7,6 +7,11 @@ const { spawn } = require("node:child_process");
 const { createInterface } = require("node:readline");
 
 const repoRoot = resolve(__dirname, "..");
+
+// When bun runs the test runner, process.execPath is the Bun binary.
+// MCP server requires better-sqlite3 which Bun blocklists (issue #4290).
+// Use the system node binary for child processes so better-sqlite3 loads correctly.
+const nodeExec = typeof globalThis.Bun !== "undefined" ? "node" : process.execPath;
 
 function startMcpServer(tempDir) {
   const dbRoot = join(tempDir, "db-root");
@@ -18,7 +23,7 @@ function startMcpServer(tempDir) {
     MEM_LOG_LEVEL: "error"
   };
 
-  const child = spawn(process.execPath, [resolve(repoRoot, "dist", "mcp", "server.js")], {
+  const child = spawn(nodeExec, [resolve(repoRoot, "dist", "mcp", "server.js")], {
     cwd: repoRoot,
     env,
     stdio: ["pipe", "pipe", "pipe"]
@@ -128,6 +133,10 @@ test("MCP tools save/search/cite context using shared memory store", async () =>
       }
     });
 
+    if (save.result && save.result.isError) {
+      const errText = (save.result.content || [{ text: "unknown" }])[0].text;
+      assert.fail(`memory_save_observation error: ${errText}`);
+    }
     const savePayload = save.result.structuredContent;
     assert.equal(savePayload.inserted, true);
     assert.ok(typeof savePayload.id === "string");

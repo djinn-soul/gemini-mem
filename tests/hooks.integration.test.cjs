@@ -1,18 +1,23 @@
-const test = require("node:test");
+const test = typeof globalThis.Bun !== "undefined" ? require("bun:test").test : require("node:test");
 const assert = require("node:assert/strict");
 const { existsSync, mkdtempSync, readFileSync, rmSync } = require("node:fs");
 const { tmpdir } = require("node:os");
-const { join, resolve } = require("node:path");
+const { join, resolve, basename } = require("node:path");
 const { spawnSync } = require("node:child_process");
+
+// When bun runs the test runner, process.execPath is the Bun binary.
+// Hook/CLI scripts require better-sqlite3 which Bun blocklists (issue #4290).
+// Use the system node binary for child processes so better-sqlite3 loads correctly.
+const nodeExec = typeof globalThis.Bun !== "undefined" ? "node" : process.execPath;
 const { randomUUID } = require("node:crypto");
-const { DatabaseSync } = require("node:sqlite");
+const Database = typeof globalThis.Bun !== "undefined" ? require("bun:sqlite").Database : require("better-sqlite3");
 
 const repoRoot = resolve(__dirname, "..");
 const mockGeminiScript = resolve(repoRoot, "tests", "fixtures", "mock-gemini.cjs");
 const failingGeminiScript = resolve(repoRoot, "tests", "fixtures", "failing-gemini.cjs");
 
 function runNodeScript(scriptPath, env, inputJson) {
-  const result = spawnSync(process.execPath, [scriptPath], {
+  const result = spawnSync(nodeExec, [scriptPath], {
     cwd: repoRoot,
     env,
     input: inputJson ? JSON.stringify(inputJson) : undefined,
@@ -50,7 +55,7 @@ function initDb(env) {
 }
 
 function seedMemory(dbPath, memory) {
-  const db = new DatabaseSync(dbPath);
+  const db = new Database(dbPath);
   db.prepare(
     `INSERT INTO memories (
       id, ts, project_id, session_id, title, type, summary,
@@ -73,8 +78,8 @@ function seedMemory(dbPath, memory) {
   );
 
   db.prepare(
-    `INSERT INTO memories_fts (id, title, summary, tags, files) VALUES (?, ?, ?, ?, ?)`
-  ).run(memory.id, memory.title, memory.summary, memory.tags.join(" "), memory.files.join(" "));
+    `INSERT INTO memories_fts (id, title, summary, key_facts, tags, files) VALUES (?, ?, ?, ?, ?, ?)`
+  ).run(memory.id, memory.title, memory.summary, memory.key_facts.join(" "), memory.tags.join(" "), memory.files.join(" "));
 
   db.close();
 }
@@ -96,7 +101,7 @@ test("AfterAgent stores a redacted memory card", () => {
 
     assert.equal(output.stdout, "{}");
 
-    const db = new DatabaseSync(dbPath);
+    const db = new Database(dbPath);
     const row = db
       .prepare("SELECT summary, key_facts_json, title FROM memories WHERE project_id = ? LIMIT 1")
       .get("integration-project");
@@ -132,7 +137,7 @@ test("AfterAgent fail-open when Gemini subprocess fails", () => {
     assert.equal(output.stdout, "{}");
     assert.ok(output.stderr.includes("AfterAgent failed"), "Expected fail-open error log");
 
-    const db = new DatabaseSync(dbPath);
+    const db = new Database(dbPath);
     const row = db
       .prepare("SELECT COUNT(*) AS count FROM memories WHERE project_id = ?")
       .get("integration-project");
@@ -299,7 +304,7 @@ test("Hook telemetry writes per-project hook.log only when enabled", () => {
     });
     runNodeScript(hookScript, envDisabled, input);
 
-    const projectDir = join(dbRoot, "gemini_mem");
+    const projectDir = join(dbRoot, basename(repoRoot));
     const logPath = join(projectDir, "hook.log");
     assert.equal(existsSync(logPath), false, "Telemetry file should not exist when disabled");
 

@@ -1,4 +1,4 @@
-const test = require("node:test");
+const test = typeof globalThis.Bun !== "undefined" ? require("bun:test").test : require("node:test");
 const assert = require("node:assert/strict");
 const { mkdtempSync, rmSync } = require("node:fs");
 const { tmpdir } = require("node:os");
@@ -7,6 +7,11 @@ const { spawn } = require("node:child_process");
 const net = require("node:net");
 
 const repoRoot = resolve(__dirname, "..");
+
+// When bun runs the test runner, process.execPath is the Bun binary.
+// HTTP server requires better-sqlite3 which Bun blocklists (issue #4290).
+// Use the system node binary for child processes so better-sqlite3 loads correctly.
+const nodeExec = typeof globalThis.Bun !== "undefined" ? "node" : process.execPath;
 
 function getFreePort() {
   return new Promise((resolvePromise, rejectPromise) => {
@@ -37,7 +42,7 @@ async function startHttpServer(tempDir) {
     MEM_MCP_HTTP_PATH: "/mcp"
   };
 
-  const child = spawn(process.execPath, [resolve(repoRoot, "dist", "mcp", "http-server.js")], {
+  const child = spawn(nodeExec, [resolve(repoRoot, "dist", "mcp", "http-server.js")], {
     cwd: repoRoot,
     env,
     stdio: ["ignore", "pipe", "pipe"]
